@@ -7,14 +7,12 @@ import subprocess
 import sys
 import time
 from stat import S_ISREG, ST_CTIME, ST_MODE
-
 from copy import deepcopy
 from datetime import datetime
 from library.utilities.objects import Work
 
 def is_windows():
     return platform.system() == 'Windows'
-
 
 def get_chia_executable_name():
     return f'chia_plot'
@@ -98,7 +96,7 @@ def get_system_drives():
         drives.append(drive)
     drives.sort(reverse=True)
     return drives
-    
+
 def get_running_plots():
     chia_processes = []
     logging.info(f'Getting running chia-plotter')
