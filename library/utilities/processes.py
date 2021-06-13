@@ -4,7 +4,9 @@ import platform
 import psutil
 import re
 import subprocess
-
+import sys
+import time
+from stat import S_ISREG, ST_CTIME, ST_MODE
 
 from copy import deepcopy
 from datetime import datetime
@@ -59,6 +61,7 @@ def get_plot_drives(commands):
     if temporary2_directory:
         temporary2_drive = identify_drive(file_path=temporary2_directory, drives=drives)
     return temporary_drive, temporary2_drive, destination_drive
+
 def get_system_drives():
     drives = []
     for disk in psutil.disk_partitions(all=True):
@@ -69,9 +72,33 @@ def get_system_drives():
     drives.sort(reverse=True)
     return drives
 
-def cal_number_finished_plot(destination, datetime_start):
-    return 0
+def cal_number_finished_plot(dirpath, datetime_start):    
+    entries = (os.path.join(dirpath, fn) for fn in os.listdir(dirpath))
+    entries = ((os.stat(path), path) for path in entries)
+    # leave only regular files, insert creation date
+    total_plots = 0
+    today_plots = 0
+    yesterday_plots = 0
+    for stat, path in entries:
+        if S_ISREG(stat[ST_MODE]) and path.endswith('.plot'):            
+            total_plots = total_plots + 1
+            file_time = datetime.fromtimestamp(stat[ST_CTIME])
+            if file_time.day == datetime.today().day:
+                today_plots = today_plots + 1
+            if file_time.day == datetime.today().day - 1:
+                yesterday_plots = yesterday_plots + 1    
+    return today_plots, yesterday_plots, total_plots            
 
+def get_system_drives():
+    drives = []
+    for disk in psutil.disk_partitions(all=True):
+        drive = disk.mountpoint
+        if is_windows():
+            drive = os.path.splitdrive(drive)[0]
+        drives.append(drive)
+    drives.sort(reverse=True)
+    return drives
+    
 def get_running_plots():
     chia_processes = []
     logging.info(f'Getting running chia-plotter')
@@ -107,8 +134,8 @@ def get_running_plots():
         temporary_drive, temporary2_drive, destination_drive = get_plot_drives(commands=commands)
         num_plots = get_num_plot(commands=commands)
         work = deepcopy(Work())
-        work.datetime_start = datetime_start
-        work.finished_num_plots = cal_number_finished_plot(destination_directory, datetime_start)
+        work.datetime_start = datetime_start        
+        work.today_plots, work.yesterday_plots, work.total_plots = cal_number_finished_plot(destination_directory, datetime_start)
         work.pid = process.pid        
         work.temporary_drive = temporary_drive
         work.temporary2_drive = temporary2_drive

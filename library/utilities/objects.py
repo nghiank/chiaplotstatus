@@ -13,5 +13,7 @@ class Work:
     total_run_time = None
     
     progress = 0
-    max_num_plots = None
-    finished_num_plots = None
+    max_num_plots = None    
+    total_plots = None
+    today_plots = None
+    yesterday_plots = None
