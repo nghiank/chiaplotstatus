@@ -4,33 +4,17 @@ import json
 
 from datetime import datetime, timedelta
 
-def _get_row_info(pid, running_work, view_settings, as_raw_values=False):
+def _get_row_info(pid, running_work):
     work = running_work[pid]
-    phase_times = work.phase_times
     elapsed_time = (datetime.now() - work.datetime_start)
     elapsed_time = pretty_print_time(elapsed_time.seconds + elapsed_time.days * 86400)
-    phase_time_log = []
-    plot_id_prefix = ''
-    if work.plot_id:
-        plot_id_prefix = work.plot_id[0:7]
-    for i in range(1, 5):
-        if phase_times.get(i):
-            phase_time_log.append(phase_times.get(i))
-
-    row = [
-        work.job.name if work.job else '?',
-        work.k_size,
-        plot_id_prefix,
-        pid,
-        work.datetime_start.strftime(view_settings['datetime_format']),
-        elapsed_time,
-        work.current_phase,
-        ' / '.join(phase_time_log),
-        work.progress,
-        pretty_print_bytes(work.temp_file_size, 'gb', 0, " GiB"),
+    row = [        
+        str(work.finished_num_plots),
+        str(work.max_num_plots),   
+        str(pid),
+        work.datetime_start.strftime("%m/%d/%Y, %H:%M:%S"),
+        elapsed_time,        
     ]
-    if not as_raw_values:
-        return [str(cell) for cell in row]
     return row
 
 
@@ -70,44 +54,30 @@ def pretty_print_table(rows):
     return "\n".join(console)
 
 
-def get_job_data(jobs, running_work, view_settings, as_json=False):
+def get_job_data(running_work):
     rows = []
     added_pids = []
-    for job in jobs:
-        for pid in job.running_work:
-            if pid not in running_work:
-                continue
-            rows.append(_get_row_info(pid, running_work, view_settings, as_json))
-            added_pids.append(pid)
     for pid in running_work.keys():
         if pid in added_pids:
             continue
-        rows.append(_get_row_info(pid, running_work, view_settings, as_json))
+        rows.append(_get_row_info(pid, running_work))
         added_pids.append(pid)
-    rows.sort(key=lambda x: (x[5]), reverse=True)
+    rows.sort(key=lambda x: (x[0]), reverse=True)
     for i in range(len(rows)):
-        rows[i] = [str(i+1)] + rows[i]
-    if as_json:
-        jobs = dict(jobs=rows)
-        print(json.dumps(jobs, separators=(',', ':')))
-        return jobs
+        rows[i] = [str(i+1)] + rows[i]    
     return rows
 
 
 def pretty_print_job_data(job_data):
-    headers = ['num', 'job', 'k', 'plot_id', 'pid', 'start', 'elapsed_time', 'phase', 'phase_times', 'progress', 'temp_size']
+    headers = ['num', 'plot_complete', 'max_plot', 'pid', 'start', 'elapsed_time']
     rows = [headers] + job_data
     return pretty_print_table(rows)
 
-def print_json(jobs, running_work, view_settings):
-    get_job_data(jobs=jobs, running_work=running_work, view_settings=view_settings, as_json=True)
-
-
 def print_view(running_work):
     # Job Table
-    job_data = get_job_data(jobs=jobs, running_work=running_work, view_settings=view_settings)
+    job_data = get_job_data(running_work=running_work)
     if os.name == 'nt':
         os.system('cls')
     else:
         os.system('clear')
-    print(job_data)
+    print(pretty_print_job_data(job_data))

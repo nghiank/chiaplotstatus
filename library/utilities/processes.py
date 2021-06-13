@@ -5,8 +5,10 @@ import psutil
 import re
 import subprocess
 
+
 from copy import deepcopy
 from datetime import datetime
+from library.utilities.objects import Work
 
 def is_windows():
     return platform.system() == 'Windows'
@@ -66,7 +68,10 @@ def get_system_drives():
         drives.append(drive)
     drives.sort(reverse=True)
     return drives
-    
+
+def cal_number_finished_plot(destination, datetime_start):
+    return 0
+
 def get_running_plots():
     chia_processes = []
     logging.info(f'Getting running chia-plotter')
@@ -87,6 +92,7 @@ def get_running_plots():
         datetime_start = datetime.fromtimestamp(process.create_time())
         chia_processes.append([datetime_start, process])
     chia_processes.sort(key=lambda x: (x[0]))
+    running_work = {}
     for datetime_start, process in chia_processes:
         commands = []
         try:
@@ -102,10 +108,11 @@ def get_running_plots():
         num_plots = get_num_plot(commands=commands)
         work = deepcopy(Work())
         work.datetime_start = datetime_start
+        work.finished_num_plots = cal_number_finished_plot(destination_directory, datetime_start)
         work.pid = process.pid        
         work.temporary_drive = temporary_drive
         work.temporary2_drive = temporary2_drive
         work.destination_drive = destination_drive
-        work.num_plots = num_plots
+        work.max_num_plots = num_plots
         running_work[work.pid] = work
     return running_work
