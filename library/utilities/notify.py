@@ -31,7 +31,7 @@ def notify_warning_limit_hit(drive, usage, total, config_info, last_notification
 
 def notify_machine_temperature(current, high, critical, last_notification):
 	td = datetime.now() - last_notification['temperature']	
-	if (td.total_seconds() > 60) and (current > high):
+	if (td.total_seconds() > 60) and (high!=None and current > high):
 		txt = "The machine '{machine:s}' is getting hot with temperature current={current:0.2f}, high={high:0.2f}, critical={critical:0.2f}."
 		send(txt.format(machine=platform.node(), current=current, high=high, critical=critical))	
 		last_notification['temperature'] = datetime.now()
