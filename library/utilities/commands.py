@@ -9,7 +9,6 @@ from datetime import datetime
 
 
 def view_manager(loop=True):
-
 	running_work = get_running_plots()
 	drives = {'temp': [], 'temp2': [], 'dest': []}
 	print(running_work)
@@ -45,7 +44,7 @@ def view_manager(loop=True):
 				drives=drives, 
 				config_info=config_info, 
 				last_notification=last_notification)
-			time.sleep(600)
+			time.sleep(60)
 		except KeyboardInterrupt:
 			print("Stopped view.")
 			exit()
