@@ -4,7 +4,10 @@ import psutil
 import json
 import pprint
 
+
 from datetime import datetime, timedelta
+from library.utilities.notify import notify_num_jobs, notify_warning_limit_hit, notify_machine_temperature
+import socket
 
 def _get_row_info(pid, running_work):
     work = running_work[pid]
@@ -57,7 +60,6 @@ def pretty_print_table(rows):
     console.append(separator)
     return "\n".join(console)
 
-
 def get_job_data(running_work):
     rows = []
     added_pids = []
@@ -71,13 +73,13 @@ def get_job_data(running_work):
         rows[i] = [str(i+1)] + rows[i]    
     return rows
 
-
 def pretty_print_job_data(job_data):
-    headers = ['num', 'yesterday', 'today', 'total plots', 'max_plots', 'pid', 'start', 'elapsed_time']
+    headers = ['num', 'yesterday', 'today', 'total plots', 'max_plots', 'pid', 'start', 'elapsed_time']     
     rows = [headers] + job_data
     return pretty_print_table(rows)
 
-def get_drive_data(drives):
+
+def get_drive_data(drives, config_info, last_notification):
     headers = ['type', 'drive', 'used', 'total', '%']
     rows = []
     drive_types = {}
@@ -105,7 +107,6 @@ def get_drive_data(drives):
             if drive in checked_drives:
                 continue
             checked_drives.append(drive)
-            temp, temp2, dest = [], [], []            
             try:
                 usage = psutil.disk_usage(drive)
             except (FileNotFoundError, TypeError):
@@ -120,19 +121,17 @@ def get_drive_data(drives):
                 f'{pretty_print_bytes(usage.total, "tb", 2, "TiB")}',
                 f'{usage.percent}%',
             ]
-            rows.append(row)
+            notify_warning_limit_hit(drive, usage.used, usage.total, config_info, last_notification)
+            rows.append(row)            
     rows = [headers] + rows
     return pretty_print_table(rows)    
-
-
 
 def secs2hours(secs):
     mm, ss = divmod(secs, 60)
     hh, mm = divmod(mm, 60)
     return "%d:%02d:%02d" % (hh, mm, ss)
 
-
-def print_temperature():
+def print_temperature(last_notification):
     print("=================================================================================================")
     if hasattr(psutil, "sensors_temperatures"):
         temps = psutil.sensors_temperatures()
@@ -158,6 +157,7 @@ def print_temperature():
         if name in temps:
             print("    Temperatures:")
             for entry in temps[name]:
+                notify_machine_temperature(entry.current, entry.high, entry.critical, last_notification)
                 print("        %-20s %s°C (high=%s°C, critical=%s°C)" % (
                     entry.label or name, entry.current, entry.high,
                     entry.critical))
@@ -182,22 +182,23 @@ def print_temperature():
             print("    plugged in: no")
     print("=================================================================================================")
 
-def print_view(running_work, drives):
+def print_view(running_work, drives, config_info, last_notification):
     # Job Table
     job_data = get_job_data(running_work=running_work)
     if os.name == 'nt':
         os.system('cls')
     else:
         os.system('clear')     
+    notify_num_jobs(job_data, config_info, last_notification)
     print(pretty_print_job_data(job_data))
     print()
     print()
     print("Machine info")     
-    print(get_drive_data(drives))
+    print(get_drive_data(drives, config_info, last_notification))
 
-    print(f'CPU Usage: {psutil.cpu_percent()}%')
+    print(f'CPU Usage: {psutil.cpu_percent()}%')    
     ram_usage = psutil.virtual_memory()
     print(f'RAM Usage: {pretty_print_bytes(ram_usage.used, "gb")}/{pretty_print_bytes(ram_usage.total, "gb", 2, "GiB")}'
                   f'({ram_usage.percent}%)')
-    print_temperature()
+    print_temperature(last_notification)
 

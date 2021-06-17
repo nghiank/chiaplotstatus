@@ -2,12 +2,14 @@ from library.parse.configuration import get_config_info
 from library.utilities.processes import get_running_plots, identify_drive, get_system_drives
 from library.utilities.print import print_view
 import time
-
 from stat import S_ISREG, ST_CTIME, ST_MODE
+from library.utilities.telegram import send
 import os, sys, time
+from datetime import datetime
 
 
 def view_manager(loop=True):
+
 	running_work = get_running_plots()
 	drives = {'temp': [], 'temp2': [], 'dest': []}
 	print(running_work)
@@ -28,12 +30,21 @@ def view_manager(loop=True):
 				drive = identify_drive(file_path=directory, drives=system_drives)
 				if drive in drives[key]:
 					continue
-				drives[key].append(drive)
- 
+				drives[key].append(drive)		
 	print(drives)
+	last_notification = { 
+		'temperature' : datetime.now(),
+		'plot_nearly_full': datetime.now(),
+		'num_jobs': datetime.now()
+	}
+	config_info = get_config_info()	
 	while True:
 		try:
-			print_view(running_work=running_work,drives=drives)
+			print_view(
+				running_work=running_work,
+				drives=drives, 
+				config_info=config_info, 
+				last_notification=last_notification)
 			time.sleep(600)
 		except KeyboardInterrupt:
 			print("Stopped view.")

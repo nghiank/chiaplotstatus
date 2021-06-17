@@ -1,2 +1,5 @@
+num_jobs: 2
+notification_time_short: 5
+notification_time_long: 1
 destination_directory:
   - /media/nghia/sdb  
