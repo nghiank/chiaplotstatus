@@ -25,7 +25,7 @@ def notify_warning_limit_hit(drive, usage, total, config_info, last_notification
 		return	
 	td = datetime.now() - last_notification['plot_nearly_full']
 	percent = (usage/total) * 100
-	if (percent > 0.9) and (td.total_seconds() > config_info['notification_time_long']):
+	if (percent > 94) and (td.total_seconds() > config_info['notification_time_long']):
 		txt = "Destination folder '{drive:s}' almost full {percent:0.2f}% on '{machine:s}'"
 		send(txt.format(drive=drive, percent=percent, machine=platform.node()))
 		last_notification['plot_nearly_full'] = datetime.now()
