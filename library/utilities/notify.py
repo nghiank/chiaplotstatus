@@ -2,7 +2,7 @@ from library.utilities.telegram import send
 import platform
 from datetime import datetime, time
 
-def check_night_time():
+def check_if_night_time():
     now = datetime.now()
     now_time = now.time()
     return (now_time >= time(23,00) and now_time <= time(23,59,59)) or (now_time >= time(0,0) and now_time <= time(8,00))
