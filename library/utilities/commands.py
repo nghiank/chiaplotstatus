@@ -3,7 +3,7 @@ from library.utilities.processes import get_running_plots, identify_drive, get_s
 from library.utilities.print import print_view
 import time
 from stat import S_ISREG, ST_CTIME, ST_MODE
-from library.utilities.telegram import send,start_listen_telegram
+from library.utilities.telegram import send
 import os, sys, time
 from datetime import datetime
 
@@ -15,7 +15,6 @@ def view_manager(loop=True):
 		'num_jobs': datetime.now()
 	}
     config_info = get_config_info()	
-    start_listen_telegram()
     while True:
         try:
             running_work = get_running_plots()

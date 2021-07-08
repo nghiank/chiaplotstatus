@@ -19,12 +19,12 @@ def get_chia_executable_name():
 
 def get_plot_directories(commands):
     try:
-        temporary_index = commands.index('-t') + 1
-        destination_index = commands.index('-d') + 1
+        temporary_index = commands.index('--tmpdir') + 1
+        destination_index = commands.index('--finaldir') + 1
     except ValueError:
         return None, None, None
     try:
-        temporary2_index = commands.index('-2') + 1
+        temporary2_index = commands.index('--tmpdir2') + 1
     except ValueError:
         temporary2_index = None
     temporary_directory = commands[temporary_index]
@@ -109,7 +109,7 @@ def get_running_plots():
         except (psutil.AccessDenied, psutil.NoSuchProcess):
             continue
         try:
-            if '-n' not in process.cmdline() or '-u' not in process.cmdline():
+            if '-n' not in process.cmdline():
                 continue
         except (psutil.ZombieProcess, psutil.NoSuchProcess):
             continue
