@@ -10,6 +10,7 @@ from stat import S_ISREG, ST_CTIME, ST_MODE
 from copy import deepcopy
 from datetime import datetime
 from library.utilities.objects import Work
+from library.utilities.notify import notify_harddrive
 
 def is_windows():
     return platform.system() == 'Windows'
@@ -107,7 +108,7 @@ def get_running_plots():
             if chia_executable_name not in process.name() and 'python' not in process.name().lower():
                 continue
         except (psutil.AccessDenied, psutil.NoSuchProcess):
-            continue
+            continue            
         try:
             if '-n' not in process.cmdline():
                 continue
@@ -133,7 +134,11 @@ def get_running_plots():
         num_plots = get_num_plot(commands=commands)
         work = deepcopy(Work())
         work.datetime_start = datetime_start        
-        work.today_plots, work.yesterday_plots, work.total_plots = cal_number_finished_plot(destination_directory, datetime_start)
+        try:
+            work.today_plots, work.yesterday_plots, work.total_plots = cal_number_finished_plot(destination_directory, datetime_start)
+        except OSError as error:
+            notify_harddrive(destination_directory)
+	
         work.pid = process.pid        
         work.temporary_drive = temporary_drive
         work.temporary2_drive = temporary2_drive

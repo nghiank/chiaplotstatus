@@ -30,6 +30,13 @@ def notify_warning_limit_hit(drive, usage, total, config_info, last_notification
 		send(txt.format(drive=drive, percent=percent, machine=platform.node()))
 		last_notification['plot_nearly_full'] = datetime.now()
 
+def notify_harddrive(drive):    	
+	if check_if_night_time():		
+		return	
+	txt = "Destination folder '{drive:s}' having problem on '{machine:s}'"
+	send(txt.format(drive=drive, machine=platform.node()))
+
+
 def notify_machine_temperature(current, high, critical, last_notification):
 	td = datetime.now() - last_notification['temperature']	
 	if (td.total_seconds() > 60) and (high!=None and current > high):
